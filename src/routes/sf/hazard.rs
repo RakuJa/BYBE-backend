@@ -1,17 +1,17 @@
-use crate::AppState;
-use crate::models::hazard::hazard_field_filter::HazardFieldFilters;
-use crate::models::hazard::hazard_listing_struct::{
-    HazardListingPaginatedRequest, HazardListingSortData,
-};
-use crate::models::hazard::hazard_struct::HazardRanges;
-use crate::models::response_data::{HazardListingResponse, ResponseHazard};
-use crate::models::routers_validator_structs::PaginatedRequest;
-use crate::models::shared::action::Action;
-use crate::models::shared::game_system_enum::GameSystem;
-use crate::services::hazard_service;
-use crate::services::sanitizer::sanitize_id;
+use crate::sanitizer::sanitize_id;
 use actix_web::web::Query;
 use actix_web::{Responder, get, post, web};
+use bybe::AppState;
+use bybe::models::hazard::hazard_field_filter::HazardFieldFilters;
+use bybe::models::hazard::hazard_listing_struct::{
+    HazardListingPaginatedRequest, HazardListingSortData,
+};
+use bybe::models::hazard::hazard_struct::HazardRanges;
+use bybe::models::response_data::{HazardListingResponse, ResponseHazard};
+use bybe::models::routers_validator_structs::PaginatedRequest;
+use bybe::models::shared::action::Action;
+use bybe::models::shared::game_system_enum::GameSystem;
+use bybe::services::hazard_service;
 use utoipa::OpenApi;
 
 pub fn init_endpoints(cfg: &mut web::ServiceConfig) {

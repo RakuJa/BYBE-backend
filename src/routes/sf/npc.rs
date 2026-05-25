@@ -1,16 +1,16 @@
-use crate::AppState;
-use crate::models::npc::ancestry_enum::SfAncestry;
-use crate::models::npc::class_enum::SfClass;
-use crate::models::npc::gender_enum::Gender;
-use crate::models::npc::job_enum::SfJob;
-use crate::models::npc::name_origin_enum::{SfNameOrigin, SfNameOriginFilter};
-use crate::models::npc::request_npc_struct::{AncestryData, RandomNameData, RandomNpcData};
-use crate::models::response_data::ResponseNpc;
-use crate::models::routers_validator_structs::LevelData;
-use crate::models::shared::game_system_enum::GameSystem;
-use crate::services::npc_service;
 use actix_web::error::ErrorBadRequest;
 use actix_web::{Responder, get, post, web};
+use bybe::AppState;
+use bybe::models::npc::ancestry_enum::SfAncestry;
+use bybe::models::npc::class_enum::SfClass;
+use bybe::models::npc::gender_enum::Gender;
+use bybe::models::npc::job_enum::SfJob;
+use bybe::models::npc::name_origin_enum::{SfNameOrigin, SfNameOriginFilter};
+use bybe::models::npc::request_npc_struct::{AncestryData, RandomNameData, RandomNpcData};
+use bybe::models::response_data::ResponseNpc;
+use bybe::models::routers_validator_structs::LevelData;
+use bybe::models::shared::game_system_enum::GameSystem;
+use bybe::services::npc_service;
 use utoipa::OpenApi;
 
 pub fn init_endpoints(cfg: &mut web::ServiceConfig) {

@@ -1,20 +1,15 @@
-#[macro_use]
-extern crate maplit;
-
-mod db;
-mod models;
 mod routes;
-mod services;
+pub mod sanitizer;
 
-mod traits;
-
-use crate::models::shared::game_system_enum::GameSystem;
 use crate::routes::{health, pf, sf, shareable};
 use actix_cors::Cors;
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::{App, HttpResponse, HttpServer, Responder, get, middleware, web};
+use bybe::AppState;
+use bybe::db;
+use bybe::models::shared::game_system_enum::GameSystem;
 use dotenvy::{dotenv, from_path};
-use sqlx::{Pool, Sqlite, sqlite::SqlitePoolOptions};
+use sqlx::sqlite::SqlitePoolOptions;
 use std::env;
 use std::num::NonZero;
 use tracing::info;
@@ -28,13 +23,6 @@ use utoipa_swagger_ui::SwaggerUi;
 #[derive(OpenApi)]
 #[openapi(paths(index))]
 struct ApiDoc;
-
-#[derive(Clone)]
-pub struct AppState {
-    conn: Pool<Sqlite>,
-    name_json_path: String,
-    nick_json_path: String,
-}
 
 #[derive(Default)]
 pub enum StartupState {
