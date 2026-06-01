@@ -30,11 +30,11 @@ WORKDIR /app
 
 # Copy the built binary from the previous stage
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/bybe .
-COPY --from=builder /app/data/database.db data/
+COPY --from=builder /app/data/bybe_pglite.sql data/
 COPY --from=builder /app/data/names.json data/
 COPY --from=builder /app/data/nicknames.json data/
 
-ENV DATABASE_URL="sqlite:///app/data/database.db"
+ENV SQL_PATH="/app/data/bybe_pglite.sql"
 ENV SERVICE_STARTUP_STATE="Clean"
 ENV NAMES_PATH="/app/data/names.json"
 ENV NICKNAMES_PATH="/app/data/nicknames.json"

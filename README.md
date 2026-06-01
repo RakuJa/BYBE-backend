@@ -66,7 +66,7 @@ cargo make bybe-build
 ```bash
 cargo build
 ```
-6. Set DATABASE_URL variable to SQLite db path
+6. Set SQL_PATH variable to sql dump path to load
 7. Run the backend in development mode:
 
 ```bash

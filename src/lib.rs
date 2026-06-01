@@ -52,11 +52,15 @@ impl From<String> for StartupState {
 #[utoipa::path(get, path = "/")]
 #[get("/")]
 async fn index() -> impl Responder {
-    HttpResponse::Ok().body("Hello, world!")
+    HttpResponse::Ok().body("Hello, world! You should not be here.. What are you looking for?")
 }
 
 fn get_nickname_json_path() -> String {
     env::var("NICKNAMES_PATH").expect("Error fetching nickname json")
+}
+
+fn get_sql_dump() -> String {
+    env::var("SQL_PATH").expect("Error fetching sql dump")
 }
 
 fn get_name_json_path() -> String {
@@ -155,7 +159,7 @@ pub async fn start(
     let db_server = PgliteServer::temporary_tcp().expect("Failed to open connection to pglite");
 
     if matches!(startup_state, StartupState::Clean) {
-        let dump_sql = std::fs::read_to_string("data/bybe_pglite.sql")?;
+        let dump_sql = std::fs::read_to_string(get_sql_dump())?;
         let dump_sql: String = dump_sql
             .lines()
             .filter(|line| !line.starts_with('\\'))
