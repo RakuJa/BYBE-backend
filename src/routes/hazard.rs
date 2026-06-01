@@ -1,3 +1,7 @@
+use crate::sanitizer::sanitize_id;
+use actix_web::web::Query;
+use actix_web::{Responder, get, post, web};
+use bybe::AppState;
 use bybe::models::hazard::hazard_field_filter::HazardFieldFilters;
 use bybe::models::hazard::hazard_listing_struct::{
     HazardListingPaginatedRequest, HazardListingSortData,
@@ -8,10 +12,6 @@ use bybe::models::routers_validator_structs::PaginatedRequest;
 use bybe::models::shared::action::Action;
 use bybe::models::shared::game_system_enum::GameSystem;
 use bybe::services::hazard_service;
-use bybe::AppState;
-use actix_web::web::Query;
-use actix_web::{Responder, get, post, web};
-use crate::sanitizer::sanitize_id;
 use utoipa::OpenApi;
 
 macro_rules! define_hazard {

@@ -1,3 +1,5 @@
+use actix_web::{Responder, Result, post, web};
+use bybe::AppState;
 use bybe::models::encounter_structs::{
     AdventureGroupEnum, EncounterChallengeEnum, EncounterParams, RandomCreatureData,
     RandomEncounterData, RandomHazardData,
@@ -6,8 +8,6 @@ use bybe::models::response_data::{EncounterInfoResponse, RandomEncounterGenerato
 use bybe::models::shared::game_system_enum::GameSystem;
 use bybe::services::encounter_handler::encounter_calculator;
 use bybe::services::encounter_service;
-use bybe::AppState;
-use actix_web::{Responder, Result, post, web};
 use utoipa::OpenApi;
 
 macro_rules! define_encounter {

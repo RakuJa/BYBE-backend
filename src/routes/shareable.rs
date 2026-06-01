@@ -173,7 +173,8 @@ pub async fn get_shop_from_shareable_link(
 pub async fn get_npc_list_from_shareable_link(
     encoded_data: web::Path<String>,
 ) -> Result<impl Responder> {
-    decode_response::<ShareableNpcList>(encoded_data.into_inner(), "Invalid link for npc list").await
+    decode_response::<ShareableNpcList>(encoded_data.into_inner(), "Invalid link for npc list")
+        .await
 }
 
 #[utoipa::path(
@@ -189,7 +190,11 @@ pub async fn get_npc_list_from_shareable_link(
 pub async fn get_legacy_encounter_from_shareable_link(
     encoded_data: web::Path<String>,
 ) -> Result<impl Responder> {
-    decode_response::<LegacyShareableEncounter>(encoded_data.into_inner(), "Invalid link for encounter").await
+    decode_response::<LegacyShareableEncounter>(
+        encoded_data.into_inner(),
+        "Invalid link for encounter",
+    )
+    .await
 }
 
 #[utoipa::path(
@@ -205,5 +210,6 @@ pub async fn get_legacy_encounter_from_shareable_link(
 pub async fn get_encounter_from_shareable_link(
     encoded_data: web::Path<String>,
 ) -> Result<impl Responder> {
-    decode_response::<ShareableEncounter>(encoded_data.into_inner(), "Invalid link for encounter").await
+    decode_response::<ShareableEncounter>(encoded_data.into_inner(), "Invalid link for encounter")
+        .await
 }

@@ -1,3 +1,7 @@
+use actix_web::error::ErrorBadRequest;
+use actix_web::{Responder, get, post, web};
+use bybe::AppState;
+use bybe::db::json_fetcher;
 use bybe::models::npc::ancestry_enum::{PfAncestry, SfAncestry};
 use bybe::models::npc::class_enum::{PfClass, SfClass};
 use bybe::models::npc::culture_enum::PfCulture;
@@ -10,11 +14,7 @@ use bybe::models::npc::request_npc_struct::{AncestryData, RandomNameData, Random
 use bybe::models::response_data::ResponseNpc;
 use bybe::models::routers_validator_structs::LevelData;
 use bybe::models::shared::game_system_enum::GameSystem;
-use bybe::db::json_fetcher;
 use bybe::services::npc_service;
-use bybe::AppState;
-use actix_web::error::ErrorBadRequest;
-use actix_web::{Responder, get, post, web};
 use utoipa::OpenApi;
 
 macro_rules! define_npc_handlers {
@@ -348,7 +348,16 @@ macro_rules! define_npc {
                 Ok(web::Json(npc_service::get_random_culture(body.map(|b| b.0))))
             }
         }
-        define_npc_handlers!($prefix, $system, $tag, $class, $ancestry, $job, $name_origin, $name_filter);
+        define_npc_handlers!(
+            $prefix,
+            $system,
+            $tag,
+            $class,
+            $ancestry,
+            $job,
+            $name_origin,
+            $name_filter
+        );
     };
 
     // Without culture generator endpoint (SF)
@@ -402,7 +411,16 @@ macro_rules! define_npc {
                 ApiDoc::openapi()
             }
         }
-        define_npc_handlers!($prefix, $system, $tag, $class, $ancestry, $job, $name_origin, $name_filter);
+        define_npc_handlers!(
+            $prefix,
+            $system,
+            $tag,
+            $class,
+            $ancestry,
+            $job,
+            $name_origin,
+            $name_filter
+        );
     };
 }
 
@@ -412,6 +430,12 @@ define_npc!(
 );
 
 define_npc!(
-    sf, GameSystem::Starfinder, "sf",
-    SfClass, SfAncestry, SfJob, SfNameOrigin, SfNameOriginFilter
+    sf,
+    GameSystem::Starfinder,
+    "sf",
+    SfClass,
+    SfAncestry,
+    SfJob,
+    SfNameOrigin,
+    SfNameOriginFilter
 );

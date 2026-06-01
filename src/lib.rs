@@ -251,6 +251,8 @@ pub async fn start(
     .workers(service_workers)
     .bind((service_ip, service_port))?;
     let x = server.run().await;
-    db_server.shutdown().expect("Failed to close db connection during shutdown");
+    db_server
+        .shutdown()
+        .expect("Failed to close db connection during shutdown");
     x
 }

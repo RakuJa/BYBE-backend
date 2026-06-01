@@ -16,7 +16,7 @@ options = "hdco:"
 long_options = ["help", "db_version=", "copy_db", "overwrite"]
 
 def handle_command_line_arguments() -> Tuple[str, bool, bool]:
-    db_version: str = "2.3.0" # Oldest DB version publicly available
+    db_version: str = "4.2.0" # Oldest DB with the new logic (sql dump)
     copy_db: bool = False
     overwrite: bool = False
     try:
@@ -35,7 +35,7 @@ def handle_command_line_arguments() -> Tuple[str, bool, bool]:
             elif currentArgument in ("-d", "--db_version"):
                 db_version = currentValue
             elif currentArgument in ("-c", "--copy_db"):
-                copy_db = True
+                print("Copy flag is deprecated. Will be ignored")
             elif currentArgument in ("-o", "--overwrite"):
                 overwrite = True
     except getopt.error:
@@ -48,9 +48,9 @@ def main():
     db_version: str = x[0]
     copy_enabled: bool = x[1]
     overwrite: bool = x[2]
-    print(f"Using DB version: {db_version}")
-    remote_url: str = f"https://github.com/RakuJa/BYBE-DB/releases/download/v{db_version}/database.db"
-    database_file: str = "data/database.db"
+    print(f"Using DB version: {db_version}.")
+    remote_url: str = f"https://github.com/RakuJa/BYBE-DB/releases/download/v{db_version}/bybe_pglite.sql"
+    database_file: str = "data/bybe_pglite.sql"
     db_path = pathlib.Path(database_file)
     if overwrite:
         db_path.unlink(missing_ok=True)

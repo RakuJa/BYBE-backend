@@ -1,8 +1,19 @@
-use bybe::models::creature::creature_component::creature_combat::{CreatureCombatData, SavingThrows};
+use crate::sanitizer::sanitize_id;
+use actix_web::web::Query;
+use actix_web::{Responder, get, post, web};
+use bybe::AppState;
+use bybe::models::bestiary_structs::{
+    BestiaryPaginatedRequest, BestiaryRanges, BestiarySortData, CreatureSortEnum,
+};
+use bybe::models::creature::creature_component::creature_combat::{
+    CreatureCombatData, SavingThrows,
+};
 use bybe::models::creature::creature_component::creature_core::{
     CreatureCoreData, DerivedData, EssentialData,
 };
-use bybe::models::creature::creature_component::creature_extra::{AbilityScores, CreatureExtraData};
+use bybe::models::creature::creature_component::creature_extra::{
+    AbilityScores, CreatureExtraData,
+};
 use bybe::models::creature::creature_component::creature_spellcaster::CreatureSpellcasterData;
 use bybe::models::creature::creature_component::creature_variant::CreatureVariantData;
 use bybe::models::creature::creature_field_filter::CreatureFieldFilters;
@@ -12,14 +23,13 @@ use bybe::models::creature::creature_metadata::variant_enum::CreatureVariant;
 use bybe::models::creature::items::skill::Skill;
 use bybe::models::creature::items::spell::Spell;
 use bybe::models::creature::items::spellcaster_entry::SpellcasterEntry;
-use bybe::models::bestiary_structs::{
-    BestiaryPaginatedRequest, BestiaryRanges, BestiarySortData, CreatureSortEnum,
-};
 use bybe::models::db::sense::Sense;
 use bybe::models::item::armor_struct::Armor;
 use bybe::models::item::shield_struct::Shield;
 use bybe::models::item::weapon_struct::Weapon;
-use bybe::models::response_data::{BestiaryResponse, CreatureResponseDataModifiers, ResponseCreature};
+use bybe::models::response_data::{
+    BestiaryResponse, CreatureResponseDataModifiers, ResponseCreature,
+};
 use bybe::models::routers_validator_structs::{OrderEnum, PaginatedRequest};
 use bybe::models::shared::action::CoreAction;
 use bybe::models::shared::alignment_enum::AlignmentEnum;
@@ -28,10 +38,6 @@ use bybe::models::shared::pf_version_enum::GameSystemVersionEnum;
 use bybe::models::shared::rarity_enum::RarityEnum;
 use bybe::models::shared::size_enum::SizeEnum;
 use bybe::services::bestiary_service;
-use bybe::AppState;
-use actix_web::web::Query;
-use actix_web::{Responder, get, post, web};
-use crate::sanitizer::sanitize_id;
 use utoipa::OpenApi;
 
 macro_rules! define_bestiary {
