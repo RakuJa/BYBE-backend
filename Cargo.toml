@@ -1,7 +1,7 @@
 
 [package]
 name = "bybe-backend"
-version = "4.1.0"
+version = "4.2.0"
 authors = ["RakuJa"]
 edition = "2024"
 rust-version = "1.94.1"
@@ -34,17 +34,18 @@ future_not_send = { level = "allow", priority = 2 }
 nursery = { level = "warn", priority = 1 }
 
 [dependencies]
-bybe = { git = "https://github.com/rakuja/BYBE", branch = "refactor"}
-
+bybe = { git = "https://github.com/rakuja/BYBE", branch = "remove_cached_listing", version="4.2.0", features = ["cache"]}
 actix-web = "4.12.1"
 actix-cors = "0.7.1"
 
 utoipa = { version = "5.4.0", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["actix-web", "reqwest"] }
 
-sqlx = {version = "0.9.0", features = ["sqlite"]}
+sqlx = {version = "0.9.0", features = ["postgres"]}
+pglite-oxide = "0.5.0"
 
 maplit = "1.0"
+paste = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 
 dotenvy = "0.15"

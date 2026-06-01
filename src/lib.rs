@@ -1,7 +1,7 @@
 mod routes;
 pub mod sanitizer;
 
-use crate::routes::{health, pf, sf, shareable};
+use crate::routes::{bestiary, encounter, hazard, health, npc, shareable, shop};
 use actix_cors::Cors;
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::{App, HttpResponse, HttpServer, Responder, get, middleware, web};
@@ -9,7 +9,8 @@ use bybe::AppState;
 use bybe::db;
 use bybe::models::shared::game_system_enum::GameSystem;
 use dotenvy::{dotenv, from_path};
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{AssertSqlSafe, Connection};
 use std::env;
 use std::num::NonZero;
 use tracing::info;
@@ -54,10 +55,6 @@ async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello, world!")
 }
 
-fn get_service_db_url() -> String {
-    env::var("DATABASE_URL").expect("Error fetching database URL")
-}
-
 fn get_nickname_json_path() -> String {
     env::var("NICKNAMES_PATH").expect("Error fetching nickname json")
 }
@@ -94,22 +91,21 @@ fn init_docs(openapi: utoipa::openapi::OpenApi) -> utoipa::openapi::OpenApi {
     openapi
         .merge_from(health::init_docs())
         .merge_from(shareable::init_docs())
-        .nest("/pf", pf::bestiary::init_docs())
-        .nest("/pf", pf::encounter::init_docs())
-        .nest("/pf", pf::shop::init_docs())
-        .nest("/pf", pf::npc::init_docs())
-        .nest("/pf", pf::hazard::init_docs())
-        .nest("/sf", sf::bestiary::init_docs())
-        .nest("/sf", sf::encounter::init_docs())
-        .nest("/sf", sf::shop::init_docs())
-        .nest("/sf", sf::npc::init_docs())
-        .nest("/sf", sf::hazard::init_docs())
+        .nest("/pf", bestiary::pf_init_docs())
+        .nest("/pf", encounter::pf_init_docs())
+        .nest("/pf", shop::pf_init_docs())
+        .nest("/pf", npc::pf_init_docs())
+        .nest("/pf", hazard::pf_init_docs())
+        .nest("/sf", bestiary::sf_init_docs())
+        .nest("/sf", encounter::sf_init_docs())
+        .nest("/sf", shop::sf_init_docs())
+        .nest("/sf", npc::sf_init_docs())
+        .nest("/sf", hazard::sf_init_docs())
 }
 
 #[actix_web::main]
 pub async fn start(
     env_location: Option<String>,
-    db_location: Option<String>,
     jsons_location: Option<(String, String)>,
     init_log_resp: InitializeLogResponsibility,
 ) -> std::io::Result<()> {
@@ -138,9 +134,8 @@ pub async fn start(
                 )
                 .init();
         }
-        InitializeLogResponsibility::Delegated => {} // do nothing, someone else has already initialized them
+        InitializeLogResponsibility::Delegated => {}
     }
-    let db_url = db_location.unwrap_or_else(get_service_db_url);
     let (name_json_path, nick_json_path) =
         jsons_location.unwrap_or_else(|| (get_name_json_path(), get_nickname_json_path()));
     let service_ip = get_service_ip();
@@ -149,26 +144,52 @@ pub async fn start(
     let service_workers = get_service_workers();
 
     info!("Starting DB connection");
+    use pglite_oxide::PgliteServer;
 
-    // establish connection to database
-    let pool = SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect(&db_url)
-        .await
-        .expect("Error building connection pool");
-    match startup_state {
-        StartupState::Clean => {
-            info!("Starting DB PF2E Table cleanup & creation of update CORE tables");
-            db::cr_core_initializer::update_creature_core_table(&pool, GameSystem::Pathfinder)
-                .await
-                .expect("Could not initialize correctly core creature table.. Startup failed");
-
-            info!("Starting DB SF2E Table cleanup & creation of update CORE tables");
-            db::cr_core_initializer::update_creature_core_table(&pool, GameSystem::Starfinder)
-                .await
-                .expect("Could not initialize correctly core creature table.. Startup failed");
+    if matches!(startup_state, StartupState::Clean) {
+        let pglite_path = std::path::Path::new("./.pglite");
+        if pglite_path.exists() {
+            std::fs::remove_dir_all(pglite_path).expect("Failed to clean pglite directory");
         }
-        StartupState::Persistent => {}
+    }
+    let db_server = PgliteServer::temporary_tcp().expect("Failed to open connection to pglite");
+
+    if matches!(startup_state, StartupState::Clean) {
+        let dump_sql = std::fs::read_to_string("data/bybe_pglite.sql")?;
+        let dump_sql: String = dump_sql
+            .lines()
+            .filter(|line| !line.starts_with('\\'))
+            .collect::<Vec<_>>()
+            .join("\n");
+        {
+            let mut conn = sqlx::PgConnection::connect(&db_server.database_url())
+                .await
+                .expect("failed to connect to db server");
+            sqlx::raw_sql(AssertSqlSafe(dump_sql))
+                .execute(&mut conn)
+                .await
+                .expect("Failed to load data from bybe_pglite.sql into pglite");
+            sqlx::query("SET search_path TO public")
+                .execute(&mut conn)
+                .await
+                .expect("Failed to reset search_path after dump load");
+        } // conn dropped here, releasing the single pglite connection
+
+        let init_pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect(&db_server.database_url())
+            .await
+            .expect("Failed to create init pool");
+
+        info!("Starting DB PF2E Table cleanup & creation of update CORE tables");
+        db::cr_core_initializer::update_creature_core_table(&init_pool, GameSystem::Pathfinder)
+            .await
+            .expect("Could not initialize correctly core creature table.. Startup failed");
+
+        info!("Starting DB SF2E Table cleanup & creation of update CORE tables");
+        db::cr_core_initializer::update_creature_core_table(&init_pool, GameSystem::Starfinder)
+            .await
+            .expect("Could not initialize correctly core creature table.. Startup failed");
     }
 
     info!(
@@ -177,9 +198,14 @@ pub async fn start(
         service_port
     );
 
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&db_server.database_url())
+        .await
+        .expect("Failed to create runtime pool");
+
     // Swagger initialization
     let openapi = init_docs(ApiDoc::openapi());
-
     // Configure endpoints
     let server = HttpServer::new(move || {
         App::new()
@@ -187,30 +213,28 @@ pub async fn start(
             .wrap(middleware::Logger::default())
             .wrap(
                 middleware::DefaultHeaders::new()
-                    // Cache header
                     .add(CacheControl(vec![
                         CacheDirective::Private,
                         CacheDirective::MaxAge(u32::MAX),
                     ]))
-                    // Do not infer mime type header
                     .add(("X-Content-Type-Options", "nosniff")),
             )
             .service(index)
             .service(
                 web::scope("/pf")
-                    .configure(pf::bestiary::init_endpoints)
-                    .configure(pf::encounter::init_endpoints)
-                    .configure(pf::shop::init_endpoints)
-                    .configure(pf::npc::init_endpoints)
-                    .configure(pf::hazard::init_endpoints),
+                    .configure(bestiary::pf_init_endpoints)
+                    .configure(encounter::pf_init_endpoints)
+                    .configure(shop::pf_init_endpoints)
+                    .configure(npc::pf_init_endpoints)
+                    .configure(hazard::pf_init_endpoints),
             )
             .service(
                 web::scope("/sf")
-                    .configure(sf::bestiary::init_endpoints)
-                    .configure(sf::encounter::init_endpoints)
-                    .configure(sf::shop::init_endpoints)
-                    .configure(sf::npc::init_endpoints)
-                    .configure(sf::hazard::init_endpoints),
+                    .configure(bestiary::sf_init_endpoints)
+                    .configure(encounter::sf_init_endpoints)
+                    .configure(shop::sf_init_endpoints)
+                    .configure(npc::sf_init_endpoints)
+                    .configure(hazard::sf_init_endpoints),
             )
             .configure(health::init_endpoints)
             .configure(shareable::init_endpoints)
@@ -219,12 +243,14 @@ pub async fn start(
             )
             .service(SwaggerUi::new("/docs/{_:.*}").url("/api-docs/openapi.json", openapi.clone()))
             .app_data(web::Data::new(AppState {
-                conn: pool.clone(),
+                pool: pool.clone(),
                 name_json_path: name_json_path.clone(),
                 nick_json_path: nick_json_path.clone(),
             }))
     })
     .workers(service_workers)
     .bind((service_ip, service_port))?;
-    server.run().await
+    let x = server.run().await;
+    db_server.shutdown().expect("Failed to close db connection during shutdown");
+    x
 }
