@@ -39,7 +39,6 @@ dependencies = ["clean", "prebuild"]
 [tasks.bybe-build]
 dependencies = [
     "format",
-    "build",
     "lint",
     "test"
 ]
