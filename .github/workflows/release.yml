@@ -79,7 +79,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 #5.10.0
         with:
-          images: ghcr.io/${{ github.repository_owner }}/bybe-backend
+          images: ghcr.io/${{ github.repository_owner }}/bybe-be
           tags: |
             # Release tags (semver) — only on release event
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
@@ -89,7 +89,7 @@ jobs:
             # Branch tag — only on manual trigger
             type=ref,event=branch,enable=${{ github.event_name == 'workflow_dispatch' }}
           labels: |
-            org.opencontainers.image.title=BYBE-Backend
+            org.opencontainers.image.title=BYBE-Be
             org.opencontainers.image.description=Backend service for BYBE
             org.opencontainers.image.vendor=${{ github.repository_owner }}
 
