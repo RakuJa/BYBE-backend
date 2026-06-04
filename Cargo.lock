@@ -2621,9 +2621,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.31"
+version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "113b30b4cd05f7c06868fdb2854f66a7b9fece9a48425351cd532e810d74024f"
+checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 dependencies = [
  "value-bag",
 ]
@@ -3018,9 +3018,9 @@ dependencies = [
 
 [[package]]
 name = "pglite-oxide"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecf2c461ed4f7840bb3b06a5b32e8a7321868be3e68b99c15ffe2675b7ccdf03"
+checksum = "724b405e433008d85390c80e57b11c2d7d5e3c8a7ec0b1a29e27a2a7ab55c33f"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3046,39 +3046,39 @@ dependencies = [
  "wasmer-config",
  "wasmer-types",
  "wasmer-wasix",
- "webc 11.0.0",
+ "webc",
  "zstd",
 ]
 
 [[package]]
 name = "pglite-oxide-aot-aarch64-apple-darwin"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1277b8ca2a0b7d295c355c4d2c2c37a46f9fec09f66d71bf5a93ba602322f7d"
+checksum = "14743897cb696b0d23221aa45829a26245bf38eb9f300acee869fc38661befb5"
 
 [[package]]
 name = "pglite-oxide-aot-aarch64-unknown-linux-gnu"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3961d79a70dc7a24a65238871d55b942fb22fd8e1479e1bb90f4b6f794365953"
+checksum = "61f36fc1adaec4cd25fe5776a8004cfa3d7808a6ea8b2907fbe95e6ac7e38827"
 
 [[package]]
 name = "pglite-oxide-aot-x86_64-pc-windows-msvc"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a109da8983a811657f2552bd82ba37b371eeff6efc379d427bc1725161c1a006"
+checksum = "188238b0a2b8c22b017943512dc23d76922ebfeedbb71ffcab08965495dfedbc"
 
 [[package]]
 name = "pglite-oxide-aot-x86_64-unknown-linux-gnu"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e83301858902fbae126bf931f727f2eb9bb99174f51d8dbf4c5d6a6a7b29246"
+checksum = "cc6e0ca754a7399d9531c6746716effd6da1b0a125f4f8b74aefd01e3a2a17d5"
 
 [[package]]
 name = "pglite-oxide-assets"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cf16811788ef25ae5d5ef71697b201575eda4ccf8fdbe51af5dc8b94eacfd63"
+checksum = "23c36e82dc783789f454ab454f3abab65c9233df70ec0515be7facc4f109228e"
 dependencies = [
  "serde",
  "serde_json",
@@ -4956,7 +4956,7 @@ dependencies = [
  "tracing",
  "virtual-mio",
  "wasmer-package",
- "webc 12.0.0",
+ "webc",
 ]
 
 [[package]]
@@ -5373,7 +5373,7 @@ dependencies = [
  "url",
  "wasmer-config",
  "wasmer-types",
- "webc 12.0.0",
+ "webc",
 ]
 
 [[package]]
@@ -5502,7 +5502,7 @@ dependencies = [
  "wasmer-types",
  "wasmer-wasix-types",
  "wasmparser 0.250.0",
- "webc 12.0.0",
+ "webc",
  "weezl",
  "windows-sys 0.61.2",
  "xxhash-rust",
@@ -5573,34 +5573,6 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "webc"
-version = "11.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20b8b523112384e8c1caf77cffdd371ca7e0013779f081e6beafc537f5b5325d"
-dependencies = [
- "anyhow",
- "base64",
- "bytes",
- "cfg-if",
- "ciborium",
- "document-features",
- "ignore",
- "indexmap",
- "leb128",
- "lexical-sort",
- "libc",
- "once_cell",
- "path-clean",
- "rand 0.9.4",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "shared-buffer",
- "thiserror",
- "url",
 ]
 
 [[package]]
@@ -5968,9 +5940,9 @@ checksum = "fdd20c5420375476fbd4394763288da7eb0cc0b8c11deed431a91562af7335d3"
 
 [[package]]
 name = "yoke"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abe8c5fda708d9ca3df187cae8bfb9ceda00dd96231bed36e445a1a48e66f9ca"
+checksum = "709fe23a0424b6a435d82152b1bd3fdfb0833487d5fa90d05d42762a9891fef5"
 dependencies = [
  "stable_deref_trait",
  "yoke-derive",

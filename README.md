@@ -14,11 +14,11 @@
 ## Download & Run (Docker)
 Install from command line
 ```bash
-docker pull ghcr.io/rakuja/bybe-backend:latest
+docker pull ghcr.io/rakuja/bybe-be:latest
 ```
 Run
 ```bash
-docker run -p 25566:25566 --name bybe-container bybe-backend
+docker run -p 25566:25566 --name bybe-container bybe-be
 ```
 
 To run it

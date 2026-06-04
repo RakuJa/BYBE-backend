@@ -12,6 +12,14 @@ RUN apk add musl-dev
 
 RUN apk add python3
 
+RUN apk add clang-dev \
+    llvm-dev \
+    clang-static \
+    llvm-static
+
+ENV LIBCLANG_PATH=/usr/lib/llvm21/lib
+ENV LLVM_CONFIG_PATH=/usr/lib/llvm21/bin/llvm-config
+
 # Copy the project files into the container
 COPY . .
 
@@ -21,9 +29,6 @@ RUN cargo make bybe-docker-release
 
 # Stage 2: Create a minimal runtime image
 FROM alpine:latest
-
-# Adding sqlite, cannot do it before
-RUN apk add sqlite
 
 # Set the working directory in the container
 WORKDIR /app
