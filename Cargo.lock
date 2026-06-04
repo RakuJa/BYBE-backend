@@ -695,7 +695,7 @@ dependencies = [
 [[package]]
 name = "bybe"
 version = "4.2.0"
-source = "git+https://github.com/rakuja/BYBE?branch=remove-unused-group-by#f7967c3fb233171b87df7d81ddf142018fcd6967"
+source = "git+https://github.com/rakuja/BYBE?branch=remove-unused-group-by#db81d251770060c2b2e45ffd3fdac4ea580abd1c"
 dependencies = [
  "anyhow",
  "async-compression",
