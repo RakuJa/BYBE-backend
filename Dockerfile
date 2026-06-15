@@ -1,24 +1,11 @@
 # Stage 1: Build the Rust project
-FROM rust:1-alpine AS builder
+FROM clux/muslrust:stable AS builder
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Install all the required libraries
-# GCC
-RUN apk add build-base
-
-RUN apk add musl-dev
-
-RUN apk add python3
-
-RUN apk add clang-dev \
-    llvm-dev \
-    clang-static \
-    llvm-static
-
-ENV LIBCLANG_PATH=/usr/lib/llvm21/lib
-ENV LLVM_CONFIG_PATH=/usr/lib/llvm21/bin/llvm-config
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3
 
 # Copy the project files into the container
 COPY . .
