@@ -720,7 +720,7 @@ dependencies = [
 [[package]]
 name = "bybe"
 version = "4.2.0"
-source = "git+https://github.com/rakuja/BYBE?branch=add_weapon_attack_effect#7023824b662aec589abc6069f7e6c3f4958de7ff"
+source = "git+https://github.com/rakuja/BYBE?branch=pretty_trait_name#fbc765ec7940369e3bea5d49d3b1607f4f3ea092"
 dependencies = [
  "anyhow",
  "async-compression",
