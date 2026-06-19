@@ -720,7 +720,7 @@ dependencies = [
 [[package]]
 name = "bybe"
 version = "4.2.0"
-source = "git+https://github.com/rakuja/BYBE?branch=pretty_trait_name#fbc765ec7940369e3bea5d49d3b1607f4f3ea092"
+source = "git+https://github.com/rakuja/BYBE?branch=pretty_trait_name#4538f03ac2c9949676bb060664f50f9491512e3d"
 dependencies = [
  "anyhow",
  "async-compression",
