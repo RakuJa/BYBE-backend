@@ -34,9 +34,9 @@ future_not_send = { level = "allow", priority = 2 }
 nursery = { level = "warn", priority = 1 }
 
 [dependencies]
-bybe = { git = "https://github.com/rakuja/BYBE", branch = "pretty_trait_name", version="4.2.0", features = ["cache"]}
+bybe = { git = "https://github.com/rakuja/BYBE", branch = "conditions", version="4.2.0", features = ["cache"]}
 
-actix-web = "4.13.0"
+actix-web = "4.14.0"
 actix-cors = "0.7.1"
 
 utoipa = { version = "5.5.0", features = ["actix_extras"] }
