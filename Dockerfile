@@ -15,10 +15,7 @@ RUN cargo install --no-default-features --force cargo-make
 RUN cargo make bybe-docker-release
 
 # Stage 2: Create a minimal runtime image
-FROM alpine:latest
-# Combatibility for glibc based binary with musl
-RUN apk add --no-cache gcompat libssl3 ca-certificates
-
+FROM debian:bookworm-slim
 # Set the working directory in the container
 WORKDIR /app
 
