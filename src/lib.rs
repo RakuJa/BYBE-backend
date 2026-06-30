@@ -9,6 +9,7 @@ use bybe::AppState;
 use bybe::db;
 use bybe::models::shared::game_system_enum::GameSystem;
 use dotenvy::{dotenv, from_path};
+use pglite::{MultiProcessOptions, PGlite};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{AssertSqlSafe, Connection};
 use std::env;
@@ -148,7 +149,6 @@ pub async fn start(
     let service_workers = get_service_workers();
 
     info!("Starting DB connection");
-    use pglite_oxide::PgliteServer;
 
     if matches!(startup_state, StartupState::Clean) {
         let pglite_path = std::path::Path::new("./.pglite");
@@ -156,8 +156,13 @@ pub async fn start(
             std::fs::remove_dir_all(pglite_path).expect("Failed to clean pglite directory");
         }
     }
-    let db_server = PgliteServer::temporary_tcp().expect("Failed to open connection to pglite");
-
+    let db_server = PGlite::open_multi_process("./.pglite", MultiProcessOptions::default())
+        .await
+        .expect("Failed to open connection to pglite");
+    let db_uri = db_server
+        .unix_uri()
+        .await
+        .expect("Cannot fetch pglite db uri");
     if matches!(startup_state, StartupState::Clean) {
         let dump_sql = std::fs::read_to_string(get_sql_dump())?;
         let dump_sql: String = dump_sql
@@ -166,7 +171,7 @@ pub async fn start(
             .collect::<Vec<_>>()
             .join("\n");
         {
-            let mut conn = sqlx::PgConnection::connect(&db_server.database_url())
+            let mut conn = sqlx::PgConnection::connect(&db_uri)
                 .await
                 .expect("failed to connect to db server");
             sqlx::raw_sql(AssertSqlSafe(dump_sql))
@@ -181,7 +186,7 @@ pub async fn start(
 
         let init_pool = PgPoolOptions::new()
             .max_connections(1)
-            .connect(&db_server.database_url())
+            .connect(&db_uri)
             .await
             .expect("Failed to create init pool");
 
@@ -204,7 +209,7 @@ pub async fn start(
 
     let pool = PgPoolOptions::new()
         .max_connections(1)
-        .connect(&db_server.database_url())
+        .connect(&db_uri)
         .await
         .expect("Failed to create runtime pool");
 
@@ -257,6 +262,7 @@ pub async fn start(
     let x = server.run().await;
     db_server
         .shutdown()
+        .await
         .expect("Failed to close db connection during shutdown");
     x
 }
