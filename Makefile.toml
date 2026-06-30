@@ -28,7 +28,7 @@ dependencies = ["clean", "prebuild"]
 
 [tasks.build-docker-release]
 command = "cargo"
-args = ["build", "--target", "x86_64-unknown-linux-musl", "--release"]
+args = ["build", "--release"]
 dependencies = ["clean", "prebuild"]
 
 [tasks.test]
