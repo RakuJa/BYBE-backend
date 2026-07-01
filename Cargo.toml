@@ -53,3 +53,5 @@ dotenvy = "0.15"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 tracing-appender = "0.2"
+tokio = "1.52.3"
+oneshot = "0.2.1"

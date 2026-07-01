@@ -14,6 +14,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::{AssertSqlSafe, Connection};
 use std::env;
 use std::num::NonZero;
+use tokio::sync::oneshot;
 use tracing::info;
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::layer::SubscriberExt;
@@ -111,7 +112,9 @@ fn init_docs(openapi: utoipa::openapi::OpenApi) -> utoipa::openapi::OpenApi {
 #[actix_web::main]
 pub async fn start(
     env_location: Option<String>,
+    sql_location: Option<String>,
     jsons_location: Option<(String, String)>,
+    shutdown_signal: Option<oneshot::Receiver<()>>,
     init_log_resp: InitializeLogResponsibility,
 ) -> std::io::Result<()> {
     if let Some(env_path) = env_location {
@@ -164,7 +167,8 @@ pub async fn start(
         .await
         .expect("Cannot fetch pglite db uri");
     if matches!(startup_state, StartupState::Clean) {
-        let dump_sql = std::fs::read_to_string(get_sql_dump())?;
+        let sql_path = sql_location.unwrap_or_else(get_sql_dump);
+        let dump_sql = std::fs::read_to_string(sql_path)?;
         let dump_sql: String = dump_sql
             .lines()
             .filter(|line| !line.starts_with('\\'))
@@ -258,8 +262,18 @@ pub async fn start(
             }))
     })
     .workers(service_workers)
-    .bind((service_ip, service_port))?;
-    let x = server.run().await;
+    .bind((service_ip, service_port))?
+    .run();
+
+    if let Some(shutdown_signal) = shutdown_signal {
+        let server_handle = server.handle();
+        actix_web::rt::spawn(async move {
+            let _ = shutdown_signal.await;
+            server_handle.stop(true).await;
+        });
+    }
+
+    let x = server.await;
     db_server
         .shutdown()
         .await
