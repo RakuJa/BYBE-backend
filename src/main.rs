@@ -1,11 +1,8 @@
-use bybe_backend::InitializeLogResponsibility;
+use bybe_backend::{InitializeLogResponsibility, StartOptions};
 
 fn main() -> std::io::Result<()> {
-    bybe_backend::start(
-        None,
-        None,
-        None,
-        None,
-        InitializeLogResponsibility::Personal,
-    )
+    bybe_backend::start(StartOptions {
+        init_log_resp: InitializeLogResponsibility::Personal,
+        ..Default::default()
+    })
 }

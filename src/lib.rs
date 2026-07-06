@@ -51,6 +51,28 @@ impl From<String> for StartupState {
     }
 }
 
+#[derive(Default)]
+pub struct StartOptions {
+    pub env_location: Option<String>,
+    pub sql_location: Option<String>,
+    pub jsons_location: Option<(String, String)>,
+    pub pglite_location: Option<String>,
+    pub shutdown_signal: Option<oneshot::Receiver<()>>,
+    pub init_log_resp: InitializeLogResponsibility,
+    pub startup_state_override: Option<StartupState>,
+    pub ready_signal: Option<std::sync::mpsc::Sender<()>>,
+}
+
+const DEFAULT_PGLITE_DIR: &str = "./.pglite";
+
+/// Whether the pglite data directory has already been populated.
+///
+/// Callers that manage their own startup lifecycle (e.g. the Tauri app) use this
+/// to decide whether this is a first-time setup.
+pub fn db_initialized(pglite_dir: &str) -> bool {
+    std::path::Path::new(pglite_dir).exists()
+}
+
 #[utoipa::path(get, path = "/")]
 #[get("/")]
 async fn index() -> impl Responder {
@@ -110,20 +132,14 @@ fn init_docs(openapi: utoipa::openapi::OpenApi) -> utoipa::openapi::OpenApi {
 }
 
 #[actix_web::main]
-pub async fn start(
-    env_location: Option<String>,
-    sql_location: Option<String>,
-    jsons_location: Option<(String, String)>,
-    shutdown_signal: Option<oneshot::Receiver<()>>,
-    init_log_resp: InitializeLogResponsibility,
-) -> std::io::Result<()> {
-    if let Some(env_path) = env_location {
+pub async fn start(options: StartOptions) -> std::io::Result<()> {
+    if let Some(env_path) = &options.env_location {
         from_path(env_path).ok();
     } else {
         dotenv().ok();
     }
     let _guard; // to let it live for all the application, otherwise it won't write to file
-    match init_log_resp {
+    match options.init_log_resp {
         InitializeLogResponsibility::Personal => {
             let file_appender = rolling::daily("./logs", "bybe.log");
             let (file_writer, guard) = non_blocking(file_appender);
@@ -144,22 +160,28 @@ pub async fn start(
         }
         InitializeLogResponsibility::Delegated => {}
     }
-    let (name_json_path, nick_json_path) =
-        jsons_location.unwrap_or_else(|| (get_name_json_path(), get_nickname_json_path()));
+    let (name_json_path, nick_json_path) = options
+        .jsons_location
+        .unwrap_or_else(|| (get_name_json_path(), get_nickname_json_path()));
     let service_ip = get_service_ip();
     let service_port = get_service_port();
-    let startup_state: StartupState = get_service_startup_state();
+    let startup_state: StartupState = options
+        .startup_state_override
+        .unwrap_or_else(get_service_startup_state);
     let service_workers = get_service_workers();
+    let pglite_dir = options
+        .pglite_location
+        .unwrap_or_else(|| DEFAULT_PGLITE_DIR.to_string());
 
     info!("Starting DB connection");
 
     if matches!(startup_state, StartupState::Clean) {
-        let pglite_path = std::path::Path::new("./.pglite");
+        let pglite_path = std::path::Path::new(&pglite_dir);
         if pglite_path.exists() {
             std::fs::remove_dir_all(pglite_path).expect("Failed to clean pglite directory");
         }
     }
-    let db_server = PGlite::open_multi_process("./.pglite", MultiProcessOptions::default())
+    let db_server = PGlite::open_multi_process(&pglite_dir, MultiProcessOptions::default())
         .await
         .expect("Failed to open connection to pglite");
     let db_uri = db_server
@@ -167,7 +189,7 @@ pub async fn start(
         .await
         .expect("Cannot fetch pglite db uri");
     if matches!(startup_state, StartupState::Clean) {
-        let sql_path = sql_location.unwrap_or_else(get_sql_dump);
+        let sql_path = options.sql_location.unwrap_or_else(get_sql_dump);
         let dump_sql = std::fs::read_to_string(sql_path)?;
         let dump_sql: String = dump_sql
             .lines()
@@ -203,6 +225,10 @@ pub async fn start(
         db::cr_core_initializer::update_creature_core_table(&init_pool, GameSystem::Starfinder)
             .await
             .expect("Could not initialize correctly core creature table.. Startup failed");
+    }
+
+    if let Some(ready_signal) = options.ready_signal {
+        let _ = ready_signal.send(());
     }
 
     info!(
@@ -265,7 +291,7 @@ pub async fn start(
     .bind((service_ip, service_port))?
     .run();
 
-    if let Some(shutdown_signal) = shutdown_signal {
+    if let Some(shutdown_signal) = options.shutdown_signal {
         let server_handle = server.handle();
         actix_web::rt::spawn(async move {
             let _ = shutdown_signal.await;
