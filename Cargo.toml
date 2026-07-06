@@ -34,16 +34,15 @@ future_not_send = { level = "allow", priority = 2 }
 nursery = { level = "warn", priority = 1 }
 
 [dependencies]
-bybe = { git = "https://github.com/rakuja/BYBE", branch = "pretty_trait_name", version="4.2.0", features = ["cache"]}
-
-actix-web = "4.13.0"
+bybe = { git = "https://github.com/rakuja/BYBE", branch = "restructure_hazard", version="5.0.0", features = ["cache"]}
+actix-web = "4.14.0"
 actix-cors = "0.7.1"
 
 utoipa = { version = "5.5.0", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["actix-web", "reqwest"] }
 
 sqlx = {version = "0.9.0", features = ["postgres"]}
-pglite-oxide = "0.5.1"
+pglite-rs = { version = "0.2.7", features = ["multiple-process"] }
 
 maplit = "1.0"
 paste = "1.0"

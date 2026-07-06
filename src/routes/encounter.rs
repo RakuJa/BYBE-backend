@@ -1,15 +1,15 @@
-use actix_web::{Responder, Result, post, web};
+use actix_web::{Responder, Result, get, post, web};
 use bybe::AppState;
 use bybe::models::encounter_structs::{
     AdventureGroupEnum, EncounterChallengeEnum, EncounterParams, RandomCreatureData,
     RandomEncounterData, RandomHazardData,
 };
 use bybe::models::response_data::{EncounterInfoResponse, RandomEncounterGeneratorResponse};
+use bybe::models::shared::condition_data::ConditionData;
 use bybe::models::shared::game_system_enum::GameSystem;
 use bybe::services::encounter_handler::encounter_calculator;
 use bybe::services::encounter_service;
 use utoipa::OpenApi;
-
 macro_rules! define_encounter {
     ($prefix:ident, $system:expr, $tag:literal) => {
         paste::paste! {
@@ -17,6 +17,7 @@ macro_rules! define_encounter {
                 cfg.service(
                     web::scope("/encounter")
                         .service([<$prefix _get_encounter_info>])
+                        .service([<$prefix _get_conditions_list>])
                         .service([<$prefix _get_generated_random_encounter>]),
                 );
             }
@@ -26,9 +27,11 @@ macro_rules! define_encounter {
                 #[openapi(
                     paths(
                         [<$prefix _get_encounter_info>],
+                        [<$prefix _get_conditions_list>],
                         [<$prefix _get_generated_random_encounter>],
                     ),
                     components(schemas(
+                        ConditionData,
                         EncounterInfoResponse,
                         RandomEncounterData,
                         EncounterParams,
@@ -62,6 +65,25 @@ macro_rules! define_encounter {
                 web::Json(body): web::Json<EncounterParams>,
             ) -> Result<impl Responder> {
                 Ok(web::Json(encounter_calculator::get_encounter_info(&body)))
+            }
+
+
+            #[utoipa::path(
+                get,
+                path = "/encounter/conditions",
+                tags = [$tag, "encounter"],
+                responses(
+                    (status=200, description = "Successful Response", body = [String]),
+                    (status=400, description = "Bad request.")
+                ),
+            )]
+            #[get("/conditions")]
+            pub async fn [<$prefix _get_conditions_list>](
+                data: web::Data<AppState>,
+            ) -> actix_web::Result<impl Responder> {
+                Ok(web::Json(
+                    encounter_service::get_conditions_list(&data, $system).await,
+                ))
             }
 
             #[utoipa::path(

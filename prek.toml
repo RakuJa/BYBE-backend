@@ -1,11 +1,4 @@
 [[repos]]
-repo = "https://github.com/crate-ci/typos"
-rev = "v1.38.1"
-hooks = [
-    {id = "typos", args = ["--config=typos.toml"], pass_filenames = false}
-]
-
-[[repos]]
 repo = "local"
 hooks = [
     {id = "format", name = "format code", entry = "cargo fmt --all", language = "system", pass_filenames = false},
