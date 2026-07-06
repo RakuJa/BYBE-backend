@@ -19,7 +19,7 @@ use tracing::info;
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{EnvFilter, Layer, fmt};
+use tracing_subscriber::{EnvFilter, Layer, fmt, reload};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -139,12 +139,15 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
         dotenv().ok();
     }
     let _guard; // to let it live for all the application, otherwise it won't write to file
+    let stdout_reload_handle;
     match options.init_log_resp {
         InitializeLogResponsibility::Personal => {
             let file_appender = rolling::daily("./logs", "bybe.log");
             let (file_writer, guard) = non_blocking(file_appender);
             _guard = guard;
 
+            let (stdout_filter, handle) = reload::Layer::new(EnvFilter::new("info"));
+            stdout_reload_handle = Some(handle);
             tracing_subscriber::registry()
                 .with(
                     fmt::layer()
@@ -154,11 +157,13 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
                 .with(
                     fmt::layer()
                         .with_writer(std::io::stdout)
-                        .with_filter(EnvFilter::new("info")),
+                        .with_filter(stdout_filter),
                 )
                 .init();
         }
-        InitializeLogResponsibility::Delegated => {}
+        InitializeLogResponsibility::Delegated => {
+            stdout_reload_handle = None;
+        }
     }
     let (name_json_path, nick_json_path) = options
         .jsons_location
@@ -189,6 +194,9 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
         .await
         .expect("Cannot fetch pglite db uri");
     if matches!(startup_state, StartupState::Clean) {
+        if let Some(ref handle) = stdout_reload_handle {
+            let _ = handle.reload(EnvFilter::new("info,sqlx=off"));
+        }
         let sql_path = options.sql_location.unwrap_or_else(get_sql_dump);
         let dump_sql = std::fs::read_to_string(sql_path)?;
         let dump_sql: String = dump_sql
@@ -225,6 +233,9 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
         db::cr_core_initializer::update_creature_core_table(&init_pool, GameSystem::Starfinder)
             .await
             .expect("Could not initialize correctly core creature table.. Startup failed");
+        if let Some(ref handle) = stdout_reload_handle {
+            let _ = handle.reload(EnvFilter::new("info"));
+        }
     }
 
     if let Some(ready_signal) = options.ready_signal {
