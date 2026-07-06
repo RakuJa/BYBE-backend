@@ -1,6 +1,6 @@
-use crate::AppState;
 use actix_web::web::Json;
 use actix_web::{get, web};
+use bybe::AppState;
 use maplit::hashmap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -35,8 +35,7 @@ pub fn init_docs() -> utoipa::openapi::OpenApi {
 )]
 #[get("/health")]
 pub async fn get_health(data: web::Data<AppState>) -> Json<HealthResponse> {
-    let conn = &data.conn;
-    let is_db_up = !conn.is_closed();
+    let is_db_up = data.pool.acquire().await.is_ok();
     Json(HealthResponse {
         ready: is_db_up.to_string(),
         dependencies: vec![hashmap! {

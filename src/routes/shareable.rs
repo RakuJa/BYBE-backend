@@ -1,10 +1,11 @@
-use crate::models::shearable_data::ShareableNpcList;
-use crate::models::shearable_data::ShareableShop;
-use crate::models::shearable_data::{LegacyShareableEncounter, ShareableEncounter};
-use crate::traits::base64::base64_decode::Base64Decode;
-use crate::traits::base64::base64_encode::Base64Encode;
 use actix_web::error::ErrorBadRequest;
 use actix_web::{Responder, Result, get, post, web};
+use bybe::models::shearable_data::ShareableNpcList;
+use bybe::models::shearable_data::ShareableShop;
+use bybe::models::shearable_data::{LegacyShareableEncounter, ShareableEncounter};
+use bybe::traits::base64::base64_decode::Base64Decode;
+use bybe::traits::base64::base64_encode::Base64Encode;
+use serde::Serialize;
 use utoipa::OpenApi;
 
 pub fn init_endpoints(cfg: &mut web::ServiceConfig) {
@@ -45,6 +46,20 @@ pub fn init_docs() -> utoipa::openapi::OpenApi {
     ApiDoc::openapi()
 }
 
+async fn encode_response<T: Base64Encode + Sync>(body: T, err_msg: &'static str) -> Result<String> {
+    body.encode().await.map_err(|_| ErrorBadRequest(err_msg))
+}
+
+async fn decode_response<T: Base64Decode + Serialize + Send>(
+    encoded: String,
+    err_msg: &'static str,
+) -> Result<web::Json<T>> {
+    T::decode(encoded)
+        .await
+        .map(web::Json)
+        .map_err(|_| ErrorBadRequest(err_msg))
+}
+
 #[utoipa::path(
     post,
     path = "/shareable/shop/encode",
@@ -63,9 +78,7 @@ pub fn init_docs() -> utoipa::openapi::OpenApi {
 pub async fn get_shop_shareable_link(
     web::Json(body): web::Json<ShareableShop>,
 ) -> Result<impl Responder> {
-    body.encode()
-        .await
-        .map_or_else(|_| Err(ErrorBadRequest("Invalid JSON data for Shop")), Ok)
+    encode_response(body, "Invalid JSON data for Shop").await
 }
 
 #[utoipa::path(
@@ -86,9 +99,7 @@ pub async fn get_shop_shareable_link(
 pub async fn get_npc_shareable_link(
     web::Json(body): web::Json<ShareableNpcList>,
 ) -> Result<impl Responder> {
-    body.encode()
-        .await
-        .map_or_else(|_| Err(ErrorBadRequest("Invalid JSON data for Npc")), Ok)
+    encode_response(body, "Invalid JSON data for Npc").await
 }
 
 #[utoipa::path(
@@ -109,10 +120,7 @@ pub async fn get_npc_shareable_link(
 pub async fn get_legacy_encounter_shareable_link(
     web::Json(body): web::Json<LegacyShareableEncounter>,
 ) -> Result<impl Responder> {
-    body.encode().await.map_or_else(
-        |_| Err(ErrorBadRequest("Invalid JSON data for Encounter")),
-        Ok,
-    )
+    encode_response(body, "Invalid JSON data for Encounter").await
 }
 
 #[utoipa::path(
@@ -133,10 +141,7 @@ pub async fn get_legacy_encounter_shareable_link(
 pub async fn get_encounter_shareable_link(
     web::Json(body): web::Json<ShareableEncounter>,
 ) -> Result<impl Responder> {
-    body.encode().await.map_or_else(
-        |_| Err(ErrorBadRequest("Invalid JSON data for Encounter")),
-        Ok,
-    )
+    encode_response(body, "Invalid JSON data for Encounter").await
 }
 
 #[utoipa::path(
@@ -152,12 +157,7 @@ pub async fn get_encounter_shareable_link(
 pub async fn get_shop_from_shareable_link(
     encoded_data: web::Path<String>,
 ) -> Result<impl Responder> {
-    ShareableShop::decode(encoded_data.clone())
-        .await
-        .map_or_else(
-            |_| Err(ErrorBadRequest("Invalid link for shop")),
-            |res| Ok(web::Json(res)),
-        )
+    decode_response::<ShareableShop>(encoded_data.into_inner(), "Invalid link for shop").await
 }
 
 #[utoipa::path(
@@ -173,12 +173,8 @@ pub async fn get_shop_from_shareable_link(
 pub async fn get_npc_list_from_shareable_link(
     encoded_data: web::Path<String>,
 ) -> Result<impl Responder> {
-    ShareableNpcList::decode(encoded_data.clone())
+    decode_response::<ShareableNpcList>(encoded_data.into_inner(), "Invalid link for npc list")
         .await
-        .map_or_else(
-            |_| Err(ErrorBadRequest("Invalid link for npc list")),
-            |res| Ok(web::Json(res)),
-        )
 }
 
 #[utoipa::path(
@@ -194,12 +190,11 @@ pub async fn get_npc_list_from_shareable_link(
 pub async fn get_legacy_encounter_from_shareable_link(
     encoded_data: web::Path<String>,
 ) -> Result<impl Responder> {
-    LegacyShareableEncounter::decode(encoded_data.clone())
-        .await
-        .map_or_else(
-            |_| Err(ErrorBadRequest("Invalid link for encounter")),
-            |res| Ok(web::Json(res)),
-        )
+    decode_response::<LegacyShareableEncounter>(
+        encoded_data.into_inner(),
+        "Invalid link for encounter",
+    )
+    .await
 }
 
 #[utoipa::path(
@@ -215,10 +210,6 @@ pub async fn get_legacy_encounter_from_shareable_link(
 pub async fn get_encounter_from_shareable_link(
     encoded_data: web::Path<String>,
 ) -> Result<impl Responder> {
-    ShareableEncounter::decode(encoded_data.clone())
+    decode_response::<ShareableEncounter>(encoded_data.into_inner(), "Invalid link for encounter")
         .await
-        .map_or_else(
-            |_| Err(ErrorBadRequest("Invalid link for encounter")),
-            |res| Ok(web::Json(res)),
-        )
 }

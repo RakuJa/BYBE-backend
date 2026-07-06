@@ -14,11 +14,11 @@
 ## Download & Run (Docker)
 Install from command line
 ```bash
-docker pull ghcr.io/rakuja/bybe-backend:latest
+docker pull ghcr.io/rakuja/bybe-be:latest
 ```
 Run
 ```bash
-docker run -p 25566:25566 --name bybe-container bybe-backend
+docker run -p 25566:25566 --name bybe-container bybe-be
 ```
 
 To run it
@@ -66,7 +66,7 @@ cargo make bybe-build
 ```bash
 cargo build
 ```
-6. Set DATABASE_URL variable to SQLite db path
+6. Set SQL_PATH variable to sql dump path to load
 7. Run the backend in development mode:
 
 ```bash

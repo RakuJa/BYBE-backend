@@ -1,5 +1,5 @@
-use bybe::InitializeLogResponsibility;
+use bybe_backend::InitializeLogResponsibility;
 
 fn main() -> std::io::Result<()> {
-    bybe::start(None, None, None, InitializeLogResponsibility::Personal)
+    bybe_backend::start(None, None, InitializeLogResponsibility::Personal)
 }
