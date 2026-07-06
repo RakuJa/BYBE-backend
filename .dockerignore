@@ -7,3 +7,5 @@ __pycache__
 *.egg
 target
 venv
+.pglite
+logs
