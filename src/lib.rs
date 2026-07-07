@@ -9,7 +9,7 @@ use bybe::AppState;
 use bybe::db;
 use bybe::models::shared::game_system_enum::GameSystem;
 use dotenvy::{dotenv, from_path};
-use pglite::{MultiProcessOptions, PGlite};
+use postgresql_embedded::{PostgreSQL, SettingsBuilder};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{AssertSqlSafe, Connection};
 use std::env;
@@ -56,21 +56,21 @@ pub struct StartOptions {
     pub env_location: Option<String>,
     pub sql_location: Option<String>,
     pub jsons_location: Option<(String, String)>,
-    pub pglite_location: Option<String>,
+    pub db_data_dir: Option<String>,
     pub shutdown_signal: Option<oneshot::Receiver<()>>,
     pub init_log_resp: InitializeLogResponsibility,
     pub startup_state_override: Option<StartupState>,
     pub ready_signal: Option<std::sync::mpsc::Sender<()>>,
 }
 
-const DEFAULT_PGLITE_DIR: &str = "./.pglite";
+const DEFAULT_DB_DATA_DIR: &str = "./.postgres-data";
 
-/// Whether the pglite data directory has already been populated.
+/// Whether the embedded PostgreSQL data directory has already been populated.
 ///
 /// Callers that manage their own startup lifecycle (e.g. the Tauri app) use this
 /// to decide whether this is a first-time setup.
-pub fn db_initialized(pglite_dir: &str) -> bool {
-    std::path::Path::new(pglite_dir).exists()
+pub fn db_initialized(db_data_dir: &str) -> bool {
+    std::path::Path::new(db_data_dir).exists()
 }
 
 #[utoipa::path(get, path = "/")]
@@ -174,25 +174,38 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
         .startup_state_override
         .unwrap_or_else(get_service_startup_state);
     let service_workers = get_service_workers();
-    let pglite_dir = options
-        .pglite_location
-        .unwrap_or_else(|| DEFAULT_PGLITE_DIR.to_string());
+    let db_data_dir = options
+        .db_data_dir
+        .unwrap_or_else(|| DEFAULT_DB_DATA_DIR.to_string());
 
     info!("Starting DB connection");
 
     if matches!(startup_state, StartupState::Clean) {
-        let pglite_path = std::path::Path::new(&pglite_dir);
-        if pglite_path.exists() {
-            std::fs::remove_dir_all(pglite_path).expect("Failed to clean pglite directory");
+        let db_data_path = std::path::Path::new(&db_data_dir);
+        if db_data_path.exists() {
+            std::fs::remove_dir_all(db_data_path).expect("Failed to clean db data directory");
         }
     }
-    let db_server = PGlite::open_multi_process(&pglite_dir, MultiProcessOptions::default())
+    let mut postgresql = PostgreSQL::new(
+        SettingsBuilder::new()
+            .data_dir(db_data_dir)
+            .host("127.0.0.1")
+            // 0 = pick a free port at startup, avoiding conflicts with any
+            // system-wide PostgreSQL the user might already have running.
+            .port(0)
+            .temporary(false)
+            .timeout(Some(std::time::Duration::from_secs(120)))
+            .build(),
+    );
+    postgresql
+        .setup()
         .await
-        .expect("Failed to open connection to pglite");
-    let db_uri = db_server
-        .unix_uri()
+        .expect("Failed to set up embedded PostgreSQL");
+    postgresql
+        .start()
         .await
-        .expect("Cannot fetch pglite db uri");
+        .expect("Failed to start embedded PostgreSQL");
+    let db_uri = postgresql.settings().url("postgres");
     if matches!(startup_state, StartupState::Clean) {
         if let Some(ref handle) = stdout_reload_handle {
             let _ = handle.reload(EnvFilter::new("info,sqlx=off"));
@@ -211,12 +224,12 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
             sqlx::raw_sql(AssertSqlSafe(dump_sql))
                 .execute(&mut conn)
                 .await
-                .expect("Failed to load data from bybe_pglite.sql into pglite");
+                .expect("Failed to load data from SQL dump into database");
             sqlx::query("SET search_path TO public")
                 .execute(&mut conn)
                 .await
                 .expect("Failed to reset search_path after dump load");
-        } // conn dropped here, releasing the single pglite connection
+        } // conn dropped here, releasing the single init connection
 
         let init_pool = PgPoolOptions::new()
             .max_connections(1)
@@ -311,9 +324,9 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
     }
 
     let x = server.await;
-    db_server
-        .shutdown()
+    postgresql
+        .stop()
         .await
-        .expect("Failed to close db connection during shutdown");
+        .expect("Failed to stop embedded PostgreSQL during shutdown");
     x
 }
