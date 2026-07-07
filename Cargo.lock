@@ -537,7 +537,7 @@ checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 [[package]]
 name = "bybe"
 version = "5.0.0"
-source = "git+https://github.com/rakuja/BYBE?branch=master#1bea5d9fab62ea571bcdb3168aad2ad0a68c4dc8"
+source = "git+https://github.com/rakuja/BYBE?branch=master#da20bbbd02aef82776536af0f5b677a6a3f1ae1d"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -2443,9 +2443,9 @@ dependencies = [
 
 [[package]]
 name = "rustversion"
-version = "1.0.22"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
+checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "ruzstd"
