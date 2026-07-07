@@ -105,6 +105,10 @@ fn get_service_port() -> u16 {
         .map_or(25566, |port| port.parse().unwrap_or(25566))
 }
 
+fn get_db_password() -> String {
+    env::var("DB_PASSWORD").unwrap_or_else(|_| "bybe-local-only".to_string())
+}
+
 fn get_service_workers() -> usize {
     let available_cpus =
         usize::from(std::thread::available_parallelism().unwrap_or(NonZero::new(1).unwrap()));
@@ -193,6 +197,9 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
             // 0 = pick a free port at startup, avoiding conflicts with any
             // system-wide PostgreSQL the user might already have running.
             .port(0)
+            // set static pwd
+            .username("postgres")
+            .password(get_db_password())
             .temporary(false)
             .timeout(Some(std::time::Duration::from_secs(120)))
             .build(),
