@@ -42,7 +42,7 @@ utoipa = { version = "5.5.0", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["actix-web", "reqwest"] }
 
 sqlx = {version = "0.9.0", features = ["postgres"]}
-pglite-rs = { version = "0.2.7", features = ["multiple-process"] }
+pglite-rs = { version = "=0.2.7", features = ["multiple-process"] }
 
 maplit = "1.0"
 paste = "1.0"
