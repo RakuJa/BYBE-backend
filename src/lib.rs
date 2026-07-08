@@ -15,7 +15,7 @@ use sqlx::{AssertSqlSafe, Connection};
 use std::env;
 use std::num::NonZero;
 use tokio::sync::oneshot;
-use tracing::info;
+use tracing::{info, warn};
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -331,9 +331,36 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
     }
 
     let x = server.await;
-    postgresql
-        .stop()
-        .await
-        .expect("Failed to stop embedded PostgreSQL during shutdown");
+    if let Err(e) = force_kill_postgres(&postgresql.settings().data_dir) {
+        warn!("Error killing postgres process: {}", e);
+        // kill failed, pivot to normal shutdown
+        postgresql
+            .stop()
+            .await
+            .expect("Failed to stop embedded PostgreSQL during shutdown");
+    }
     x
+}
+
+fn force_kill_postgres(data_dir: &std::path::Path) -> anyhow::Result<()> {
+    let Ok(contents) = std::fs::read_to_string(data_dir.join("postmaster.pid")) else {
+        anyhow::bail!("Could not read postmaster.pid");
+    };
+    let Some(Ok(pid)) = contents
+        .lines()
+        .next()
+        .map(str::trim)
+        .map(str::parse::<u32>)
+    else {
+        anyhow::bail!("Could not parse postmaster.pid");
+    };
+    #[cfg(windows)]
+    std::process::Command::new("taskkill")
+        .args(["/PID", &pid.to_string(), "/F"])
+        .status()?;
+    #[cfg(not(windows))]
+    std::process::Command::new("kill")
+        .args(["-9", &pid.to_string()])
+        .status()?;
+    Ok(())
 }
