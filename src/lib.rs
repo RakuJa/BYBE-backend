@@ -277,7 +277,7 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
     // Swagger initialization
     let openapi = init_docs(ApiDoc::openapi());
     // Configure endpoints
-    let server = HttpServer::new(move || {
+    let mut server_builder = HttpServer::new(move || {
         App::new()
             .wrap(Cors::permissive())
             .wrap(middleware::Logger::default())
@@ -318,19 +318,17 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
                 nick_json_path: nick_json_path.clone(),
             }))
     })
-    .workers(service_workers)
-    .bind((service_ip, service_port))?
-    .run();
+    .workers(service_workers);
 
     if let Some(shutdown_signal) = options.shutdown_signal {
-        let server_handle = server.handle();
-        actix_web::rt::spawn(async move {
-            let _ = shutdown_signal.await;
-            server_handle.stop(true).await;
-        });
+        server_builder = server_builder
+            .shutdown_signal(async move {
+                let _ = shutdown_signal.await;
+            })
+            .shutdown_timeout(10);
     }
 
-    let x = server.await;
+    let x = server_builder.bind((service_ip, service_port))?.run().await;
     if let Err(e) = force_kill_postgres(&postgresql.settings().data_dir) {
         warn!("Error killing postgres process: {}", e);
         // kill failed, pivot to normal shutdown
@@ -342,7 +340,7 @@ pub async fn start(options: StartOptions) -> std::io::Result<()> {
     x
 }
 
-fn force_kill_postgres(data_dir: &std::path::Path) -> anyhow::Result<()> {
+pub fn force_kill_postgres(data_dir: &std::path::Path) -> anyhow::Result<()> {
     let Ok(contents) = std::fs::read_to_string(data_dir.join("postmaster.pid")) else {
         anyhow::bail!("Could not read postmaster.pid");
     };
@@ -355,9 +353,17 @@ fn force_kill_postgres(data_dir: &std::path::Path) -> anyhow::Result<()> {
         anyhow::bail!("Could not parse postmaster.pid");
     };
     #[cfg(windows)]
-    std::process::Command::new("taskkill")
-        .args(["/PID", &pid.to_string(), "/F"])
-        .status()?;
+    {
+        // taskkill.exe is a console app: spawning it from this windowless
+        // (GUI-subsystem) process would otherwise flash a console window on
+        // screen for an instant during shutdown.
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        std::process::Command::new("taskkill")
+            .args(["/PID", &pid.to_string(), "/F"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .status()?;
+    }
     #[cfg(not(windows))]
     std::process::Command::new("kill")
         .args(["-9", &pid.to_string()])
