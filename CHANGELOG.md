@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.1] - 2026-08-11
+
+### Fixed
+
+- Update deps to solve spell parsing error
+
 ## [5.0.0] - 2026-07-09
 
 ### Added
@@ -255,6 +261,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set filtering was doing union operation instead of intersection
 - Filter correctly vectors containing integer with value < -1
 
+[5.0.1]: https://github.com/RakuJa/BYBE-backend/compare/v5.0.0..v5.0.1
 [5.0.0]: https://github.com/RakuJa/BYBE-backend/compare/v4.1.0..v5.0.0
 [4.1.0]: https://github.com/RakuJa/BYBE-backend/compare/v4.0.2..v4.1.0
 [4.0.2]: https://github.com/RakuJa/BYBE-backend/compare/v4.0.1..v4.0.2
