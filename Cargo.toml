@@ -1,7 +1,7 @@
 
 [package]
 name = "bybe-backend"
-version = "5.0.1"
+version = "5.1.0"
 authors = ["RakuJa"]
 edition = "2024"
 rust-version = "1.94.1"
