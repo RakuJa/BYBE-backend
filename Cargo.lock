@@ -139,9 +139,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web"
-version = "4.14.1"
+version = "4.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58356675d8c86d2e720480645a0316808471a62d0073f6a3b98810a5e0ca0e73"
+checksum = "bbacab3593b6b4f7be815076fc52d60a83c873426824675417e2abdd229e2e36"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -560,7 +560,7 @@ checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 [[package]]
 name = "bybe"
 version = "5.0.0"
-source = "git+https://github.com/rakuja/BYBE?branch=master#fc33500ffe54563d757f1df8ed2fcc0e91e78e57"
+source = "git+https://github.com/rakuja/BYBE?branch=improve_description_and_elite_weak#d3c31193d69f89f3e4b7a29932e6bd37f4d7442f"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -569,6 +569,7 @@ dependencies = [
  "bon",
  "cached",
  "counter",
+ "evalexpr",
  "futures",
  "itertools 0.15.0",
  "maplit",
@@ -1114,6 +1115,12 @@ dependencies = [
  "cfg-if",
  "windows-sys 0.61.2",
 ]
+
+[[package]]
+name = "evalexpr"
+version = "13.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25929004897f2bbab309121a60400d36992f6d911d09baa6c172f6cc55706601"
 
 [[package]]
 name = "event-listener"
