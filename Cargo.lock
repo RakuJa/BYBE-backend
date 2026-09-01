@@ -558,7 +558,7 @@ checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 [[package]]
 name = "bybe"
 version = "5.1.0"
-source = "git+https://github.com/rakuja/BYBE?branch=new_item_types#ccb71540b3b9fb508f6dfac20a9e2776bb42dbeb"
+source = "git+https://github.com/rakuja/BYBE?branch=new_item_types#dd3604a6ae1fa25ee53e65b3d0784244d9abaa12"
 dependencies = [
  "anyhow",
  "async-compression",
