@@ -7,10 +7,13 @@ use bybe::models::item::item_field_filter::ItemFieldFilters;
 use bybe::models::item::item_metadata::type_enum::{ItemTypeEnum, WeaponTypeEnum};
 use bybe::models::item::item_struct::Item;
 use bybe::models::item::shield_struct::ShieldData;
-use bybe::models::item::shop_structs::{
-    ItemSortEnum, PfShopTemplateEnum, RandomShopData, SfShopTemplateEnum, ShopPaginatedRequest,
-    ShopRanges, ShopSortData, ShopTemplateData,
-};
+use bybe::models::item::shop_structs::item_sort_enum::ItemSortEnum;
+use bybe::models::item::shop_structs::random_shop_data::schemas::RandomShopData;
+use bybe::models::item::shop_structs::ranges::ShopRanges;
+use bybe::models::item::shop_structs::shop_paginated_request::ShopPaginatedRequest;
+use bybe::models::item::shop_structs::sort_data::ShopSortData;
+use bybe::models::item::shop_structs::template_data::ShopTemplateData;
+use bybe::models::item::shop_structs::template_data::{PfShopTemplateEnum, SfShopTemplateEnum};
 use bybe::models::item::weapon_struct::{DamageData, WeaponData};
 use bybe::models::response_data::{ResponseItem, ShopListingResponse};
 use bybe::models::routers_validator_structs::{Dice, PaginatedRequest};
