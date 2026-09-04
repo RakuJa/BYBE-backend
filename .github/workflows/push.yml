@@ -11,15 +11,15 @@ jobs:
   prek:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 #7.0.1
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src, rustfmt, clippy
-      - name: Install cargo-udeps
-        run: cargo install cargo-udeps --locked
-      - uses: davidB/rust-cargo-make@d8952235ddd22b65d7c6b9194d4dbd58c3ffc48a #1.14.0
+      - uses: taiki-e/install-action@e67fa11c4b9316fa714ddf0abed07a0c3143b95b #2.87.4
+        with:
+          tool: cargo-udeps,cargo-make
       - name: Executes prebuild (download db, prepare data) if needed
         run: cargo make prebuild
-      - uses: j178/prek-action@0bb87d7f00b0c99306c8bcb8b8beba1eb581c037 #1.1.1
+      - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
         env:
           SQL_PATH: "data/bybe_pglite.sql"
